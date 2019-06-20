@@ -1,0 +1,29 @@
+<h2>Home</h2>
+
+<div id="file-manager"></div>
+<script>
+    $(function () {
+        $("#file-manager").dxFileManager({
+            name: "fileManager",
+            fileProvider: new DevExpress.FileProviders.WebApi({
+                endpointUrl: "http://localhost:2220/FileManagerApi/FileSystem"
+            }),
+            itemView: {
+                mode: "thumbnails"
+            },
+            customizeThumbnail: function (fileManagerItem) {
+                if (fileManagerItem.dataItem)
+                    return fileManagerItem.dataItem.thumbnailUrl;
+            },
+            height: 450,
+            permissions: {
+                create: true,
+                copy: true,
+                move: true,
+                remove: true,
+                rename: true
+            }
+        });
+    });
+
+</script>
