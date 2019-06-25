@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace FileManagerThumbs.Helpers {
+namespace FileManagerThumbs.Models {
     public class ClientFileSystemItem : IClientFileSystemItem {
         public ClientFileSystemItem() {
             CustomFields = new Dictionary<string, object>();

@@ -1,27 +1,22 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Collections;
 using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 
-namespace FileManagerThumbs.Helpers {
-    public class FileManagerThumbnailHelper {
+namespace FileManagerThumbs.Services {
+    public class FileManagerThumbnailService{
         const int ThumbnailWidth = 50;
         const int ThumbnailHeight = 50;
 
         string ThumbnailsFolderPath { get; set; }
-        ControllerContext CurrentContext;
-
+        IHostingEnvironment Environment;
+        readonly IActionContextAccessor ContextAccessor;
+        IUrlHelperFactory UrlHelperFactory; 
         readonly string[] CanGenerateThumbnailList = new string[] {
             ".png",
             ".gif",
@@ -31,16 +26,18 @@ namespace FileManagerThumbs.Helpers {
             ".bmp"
         };
 
-        public FileManagerThumbnailHelper(string thumbnailFolderPath, ControllerContext context) {
-            ThumbnailsFolderPath = thumbnailFolderPath;
-            CurrentContext = context;
+        public FileManagerThumbnailService(IHostingEnvironment env, IUrlHelperFactory urlHelperFactory, IActionContextAccessor actionContextAccessor) {
+            Environment = env;
+            ThumbnailsFolderPath = Environment.WebRootPath + "\\Thumbs";
+            ContextAccessor = actionContextAccessor;
+            UrlHelperFactory = urlHelperFactory;
 
         }
         public bool CanGenerateThumbnail(string extension) {
             return !string.IsNullOrEmpty(ThumbnailsFolderPath) && CanGenerateThumbnailList.Any(s => s.Equals(extension, StringComparison.OrdinalIgnoreCase));
         }
         public string GetThumbnailUrl(FileInfo file) {
-            var helper = new UrlHelper(CurrentContext);
+            var helper = UrlHelperFactory.GetUrlHelper(ContextAccessor.ActionContext);
             return helper.Content(GetGeneratedThumbnailUrl(file)) ?? string.Empty;
         }
         string GetGeneratedThumbnailUrl(FileInfo file) {
@@ -86,7 +83,7 @@ namespace FileManagerThumbs.Helpers {
                 return false;
             }
         }
-       
+
         string GetThumbnailFilePath(FileInfo file) {
             string thumbDir = GetThumbnailFolderName(file);
             return Path.Combine(ThumbnailsFolderPath, thumbDir, GetUriSafeFileName(GetThumbnailFileName(file)));
@@ -115,9 +112,7 @@ namespace FileManagerThumbs.Helpers {
 
         void GenerateThumbnail(Stream file, FileInfo thumbnailFile, int width, int height) {
             System.Drawing.Image original = System.Drawing.Image.FromStream(file);
-
             Bitmap thumbnail = ChangeImageSize(original, width, height);
-
             try {
                 thumbnail.Save(thumbnailFile.FullName);
             } catch {

@@ -1,24 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DevExtreme.AspNet.Mvc.FileManagement;
-using FileManagerThumbs.Helpers;
-using Microsoft.AspNetCore.Cors;
+﻿using DevExtreme.AspNet.Mvc.FileManagement;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FileManagerThumbs.Controllers {
     public class FileManagerApiController : ControllerBase {
-        IHostingEnvironment _hostingEnvironment;
-        public FileManagerApiController(IHostingEnvironment hostingEnvironment) {
+        readonly IHostingEnvironment _hostingEnvironment;
+        IFileProvider _provider;
+        public FileManagerApiController(IHostingEnvironment hostingEnvironment, IFileProvider provider) {
             _hostingEnvironment = hostingEnvironment;
+            _provider = provider;
         }
         public IActionResult FileSystem(FileSystemCommand command, string arguments) {
             var config = new FileSystemConfiguration {
                 Request = Request,
-                FileSystemProvider = new FileSystemThumbnailsProvider(_hostingEnvironment.WebRootPath + "\\ContentFolder", 
-                _hostingEnvironment.WebRootPath + "\\Thumbs", ControllerContext),
+                FileSystemProvider = _provider,
                 AllowCopy = true,
                 AllowCreate = true,
                 AllowMove = true,

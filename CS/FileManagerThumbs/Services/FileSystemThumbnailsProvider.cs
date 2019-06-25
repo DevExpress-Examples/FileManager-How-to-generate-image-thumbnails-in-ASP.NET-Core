@@ -1,21 +1,25 @@
 ﻿using DevExtreme.AspNet.Mvc.FileManagement;
-using Microsoft.AspNetCore.Mvc;
+using FileManagerThumbs.Models;
+using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace FileManagerThumbs.Helpers {
+namespace FileManagerThumbs.Services {
     public class FileSystemThumbnailsProvider : IFileProvider {
         const string ParentDirectorySymbol = "..";
         static readonly char[] PossibleDirectorySeparators = { '\\', '/' };
-        FileManagerThumbnailHelper ThumbnailHelper { get; set; }
-        DefaultFileProvider FileProvider { get; set; }
+        FileManagerThumbnailService ThumbnailService;
+        IHostingEnvironment Environment;
+        IFileProvider FileProvider { get; set; }
         public string ThumbnailPath { get; set; }
         public string RootDirectoryPath { get; }
-        public FileSystemThumbnailsProvider(string rootDirectoryPath, string thumbnailPath, ControllerContext context) {
-            ThumbnailHelper = new FileManagerThumbnailHelper(thumbnailPath, context);
-            FileProvider = new DefaultFileProvider(rootDirectoryPath);
+        public FileSystemThumbnailsProvider(IHostingEnvironment env, FileManagerThumbnailService thumbnailService) {
+            ThumbnailService = thumbnailService;
+            Environment = env;
+            RootDirectoryPath = Environment.WebRootPath + "\\ContentFolder";
+            FileProvider = new DefaultFileProvider(RootDirectoryPath);
         }
 
         public IList<IClientFileSystemItem> GetDirectoryContents(string dirKey) {
@@ -27,11 +31,11 @@ namespace FileManagerThumbs.Helpers {
 
         IClientFileSystemItem CreateClientFileItem(IClientFileSystemItem item, string dirPath) {
             string thumbnailUrl = string.Empty;
-            if(!item.IsDirectory) {
+            if (!item.IsDirectory) {
                 string filePath = Path.Combine(dirPath, item.Name);
                 var fileInfo = new FileInfo(filePath);
-                if(ThumbnailHelper.CanGenerateThumbnail(fileInfo.Extension))
-                    thumbnailUrl = ThumbnailHelper.GetThumbnailUrl(fileInfo);
+                if (ThumbnailService.CanGenerateThumbnail(fileInfo.Extension))
+                    thumbnailUrl = ThumbnailService.GetThumbnailUrl(fileInfo);
             }
             var result = new ClientFileSystemItem {
                 Name = item.Name,
@@ -59,11 +63,9 @@ namespace FileManagerThumbs.Helpers {
         public void MoveUploadedFile(FileInfo file, string destinationKey) {
             FileProvider.MoveUploadedFile(file, destinationKey);
         }
-
         public void RemoveUploadedFile(FileInfo file) {
             FileProvider.RemoveUploadedFile(file);
         }
-
         public void Copy(string sourceKey, string destinationKey) {
             FileProvider.Copy(sourceKey, destinationKey);
         }
@@ -71,15 +73,12 @@ namespace FileManagerThumbs.Helpers {
         public void Remove(string key) {
             FileProvider.Remove(key);
         }
-
-
         string GetFullDirPathWithCheckOnExistence(string rootKey) {
-            var parentDirPath = Path.Combine(FileProvider.RootDirectoryPath, PreparePath(rootKey));
-            if(!Directory.Exists(parentDirPath))
+            var parentDirPath = Path.Combine(RootDirectoryPath, PreparePath(rootKey));
+            if (!Directory.Exists(parentDirPath))
                 throw new DirectoryNotFoundException(parentDirPath);
             return parentDirPath;
         }
-
         static string PreparePath(string path) {
             if (string.IsNullOrEmpty(path))
                 return string.Empty;
@@ -98,12 +97,11 @@ namespace FileManagerThumbs.Helpers {
                     index++;
             }
 
-            if(pathParts.Any() && pathParts[0] == ParentDirectorySymbol)
+            if (pathParts.Any() && pathParts[0] == ParentDirectorySymbol)
                 throw new Exception("No access");
 
             return Path.Combine(pathParts.ToArray());
         }
     }
-
 }
 
