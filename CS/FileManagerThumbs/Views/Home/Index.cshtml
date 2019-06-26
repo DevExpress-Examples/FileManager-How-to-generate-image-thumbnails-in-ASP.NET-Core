@@ -6,7 +6,7 @@
         $("#file-manager").dxFileManager({
             name: "fileManager",
             fileProvider: new DevExpress.FileProviders.WebApi({
-                endpointUrl: "http://localhost:2220/FileManagerApi/FileSystem"
+                endpointUrl: '@Url.Action("FileSystem","FileManagerApi")'
             }),
             itemView: {
                 mode: "thumbnails"

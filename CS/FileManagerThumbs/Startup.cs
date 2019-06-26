@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DevExtreme.AspNet.Mvc.FileManagement;
+using System.IO;
 using FileManagerThumbs.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Serialization;
@@ -27,10 +23,16 @@ namespace FileManagerThumbs {
                 .AddMvc()
                 .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
 
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
-            services.AddSingleton<FileManagerThumbnailService>();
-            services.AddSingleton<IFileProvider, FileSystemThumbnailsProvider>();
+            services
+                .AddTransient<IActionContextAccessor, ActionContextAccessor>()
+                .AddSingleton<IThumbnailGeneratorService, ThumbnailGeneratorService>(serviceProvider => {
+                    var env = serviceProvider.GetService<IHostingEnvironment>();
+                    return new ThumbnailGeneratorService(
+                        Path.Combine(env.WebRootPath, "thumb"),
+                        serviceProvider.GetService<IUrlHelperFactory>(),
+                        serviceProvider.GetService<IActionContextAccessor>()
+                    );
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
