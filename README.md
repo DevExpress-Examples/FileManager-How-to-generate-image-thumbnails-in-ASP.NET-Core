@@ -31,7 +31,7 @@ This examples shows how to generate and show thumbnails for image files. The thu
             var rootPath = Path.Combine(Environment.WebRootPath, "ContentFolder");
             var config = new FileSystemConfiguration {
                 Request = Request,
-                FileSystemProvider = new DefaultFileProvider(rootPath, ThumbnailGenerator.AssignThumbnailUrl).\
+                FileSystemProvider = new DefaultFileProvider(rootPath, ThumbnailGenerator.AssignThumbnailUrl)
             };
           ...
         }
