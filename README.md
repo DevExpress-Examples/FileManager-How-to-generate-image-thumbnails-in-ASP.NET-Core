@@ -5,7 +5,7 @@ This examples shows how to generate and show thumbnails for image files. The thu
 ### Follow these steps:
 1. Add the FileManager to your page and setup it on the client side.
 2. Set the [fileProvider.endpointUrl](https://js.devexpress.com/DevExtreme/ApiReference/UI_Widgets/dxFileManager/Configuration/#fileProvider) option so that it points to your API controller.
-3. Copy the service implementation from the [ThumbnailGeneratorService.cs](.\CS\FileManagerThumbs\Services\ThumbnailGeneratorService.cs) file. It uses the [System.Drawing.Common](https://www.nuget.org/packages/System.Drawing.Common/) library that supports .NET Core: [System.Drawing.Common - Release Notes](https://github.com/dotnet/core/tree/master/release-notes). 
+3. Copy the service implementation from the [ThumbnailGeneratorService.cs](CS/FileManagerThumbs/Services/ThumbnailGeneratorService.cs) file. It uses the [System.Drawing.Common](https://www.nuget.org/packages/System.Drawing.Common/) library that supports .NET Core: [System.Drawing.Common - Release Notes](https://github.com/dotnet/core/tree/master/release-notes). 
 
 4. Register the service in Startup.cs:
 ```cs
@@ -20,7 +20,7 @@ This examples shows how to generate and show thumbnails for image files. The thu
                     );
                 });
 ```
-5. To use the service, create a method in your [API Controller](.\CS\FileManagerThumbs\Controllers\FileManagerApiController.cs) that will handle the File Manager operations and inject the service via Dependency Injection in the following way: 
+5. To use the service, create a method in your [API Controller](CS/FileManagerThumbs/Controllers/FileManagerApiController.cs) that will handle the File Manager operations and inject the service via Dependency Injection in the following way: 
 ```cs
         public FileManagerApiController(IHostingEnvironment environment, IThumbnailGeneratorService thumbnailGenerator) {
             Environment = environment;
