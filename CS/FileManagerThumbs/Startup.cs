@@ -24,15 +24,8 @@ namespace FileManagerThumbs {
                 .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
 
             services
-                .AddTransient<IActionContextAccessor, ActionContextAccessor>()
-                .AddSingleton<IThumbnailGeneratorService, ThumbnailGeneratorService>(serviceProvider => {
-                    var env = serviceProvider.GetService<IHostingEnvironment>();
-                    return new ThumbnailGeneratorService(
-                        Path.Combine(env.WebRootPath, "thumb"),
-                        serviceProvider.GetService<IUrlHelperFactory>(),
-                        serviceProvider.GetService<IActionContextAccessor>()
-                    );
-                });
+                .AddSingleton<IActionContextAccessor, ActionContextAccessor>()
+                .AddSingleton<IThumbnailGeneratorService, ThumbnailGeneratorService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

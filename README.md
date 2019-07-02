@@ -10,15 +10,8 @@ This examples shows how to generate and show thumbnails for image files. The thu
 4. Register the service in Startup.cs:
 ```cs
          services
-                .AddTransient<IActionContextAccessor, ActionContextAccessor>()
-                .AddSingleton<IThumbnailGeneratorService, ThumbnailGeneratorService>(serviceProvider => {
-                    var env = serviceProvider.GetService<IHostingEnvironment>();
-                    return new ThumbnailGeneratorService(
-                        Path.Combine(env.WebRootPath, "thumb"),
-                        serviceProvider.GetService<IUrlHelperFactory>(),
-                        serviceProvider.GetService<IActionContextAccessor>()
-                    );
-                });
+                .AddSingleton<IActionContextAccessor, ActionContextAccessor>()
+                .AddSingleton<IThumbnailGeneratorService, ThumbnailGeneratorService>();
 ```
 5. To use the service, create a method in your [API Controller](CS/FileManagerThumbs/Controllers/FileManagerApiController.cs) that will handle the File Manager operations and inject the service via Dependency Injection in the following way: 
 ```cs
