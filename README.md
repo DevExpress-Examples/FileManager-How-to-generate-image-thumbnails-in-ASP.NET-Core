@@ -32,9 +32,8 @@ This examples shows how to generate and show thumbnails for image files. The thu
 6. On the client side, use the [customizeThumbnail](https://js.devexpress.com/DevExtreme/ApiReference/UI_Widgets/dxFileManager/Configuration/#customizeThumbnail) method and get the passed thumbnailUrl from **fileManagerItem.dataItem**:
 ```js
  customizeThumbnail: function (fileManagerItem) {
-                if (fileManagerItem.dataItem)
-                    return fileManagerItem.dataItem.thumbnailUrl;
-            }
+    return fileManagerItem.dataItem ? fileManagerItem.dataItem.thumbnailUrl : null;
+}
 ```
 > **NOTE**
 > On *Unix-based* systems, you may get the *"System.TypeInitializationException: The type initializer for 'Gdip' threw an exception. ---> System.DllNotFoundException: Unable to load DLL 'libgdiplus': The specified module could not be found"* exception. To solve the problem, install gdi+ using the following command:

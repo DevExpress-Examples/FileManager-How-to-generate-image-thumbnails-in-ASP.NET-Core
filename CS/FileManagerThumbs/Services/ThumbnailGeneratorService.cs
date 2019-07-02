@@ -132,7 +132,7 @@ namespace FileManagerThumbs.Services {
         string GetSHA1Hash(byte[] data) {
             var hashBytes = CryptoProvider.ComputeHash(data);
             return string.Concat(
-                Array.ConvertAll(hashBytes, x => x.ToString("X2"))
+                Array.ConvertAll(hashBytes, b => b.ToString("x2"))
             );
         }
 
