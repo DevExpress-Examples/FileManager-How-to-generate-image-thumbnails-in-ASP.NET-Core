@@ -10,15 +10,8 @@ This examples shows how to generate and show thumbnails for image files. The thu
 4. Register the service in Startup.cs:
 ```cs
          services
-                .AddTransient<IActionContextAccessor, ActionContextAccessor>()
-                .AddSingleton<IThumbnailGeneratorService, ThumbnailGeneratorService>(serviceProvider => {
-                    var env = serviceProvider.GetService<IHostingEnvironment>();
-                    return new ThumbnailGeneratorService(
-                        Path.Combine(env.WebRootPath, "thumb"),
-                        serviceProvider.GetService<IUrlHelperFactory>(),
-                        serviceProvider.GetService<IActionContextAccessor>()
-                    );
-                });
+                .AddSingleton<IActionContextAccessor, ActionContextAccessor>()
+                .AddSingleton<IThumbnailGeneratorService, ThumbnailGeneratorService>();
 ```
 5. To use the service, create a method in your [API Controller](CS/FileManagerThumbs/Controllers/FileManagerApiController.cs) that will handle the File Manager operations and inject the service via Dependency Injection in the following way: 
 ```cs
@@ -39,9 +32,8 @@ This examples shows how to generate and show thumbnails for image files. The thu
 6. On the client side, use the [customizeThumbnail](https://js.devexpress.com/DevExtreme/ApiReference/UI_Widgets/dxFileManager/Configuration/#customizeThumbnail) method and get the passed thumbnailUrl from **fileManagerItem.dataItem**:
 ```js
  customizeThumbnail: function (fileManagerItem) {
-                if (fileManagerItem.dataItem)
-                    return fileManagerItem.dataItem.thumbnailUrl;
-            }
+    return fileManagerItem.dataItem ? fileManagerItem.dataItem.thumbnailUrl : null;
+}
 ```
 > **NOTE**
 > On *Unix-based* systems, you may get the *"System.TypeInitializationException: The type initializer for 'Gdip' threw an exception. ---> System.DllNotFoundException: Unable to load DLL 'libgdiplus': The specified module could not be found"* exception. To solve the problem, install gdi+ using the following command:

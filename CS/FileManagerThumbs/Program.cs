@@ -6,12 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
-namespace FileManagerThumbs
-{
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
+namespace FileManagerThumbs {
+    public class Program {
+        public static void Main(string[] args) {
             BuildWebHost(args).Run();
         }
 

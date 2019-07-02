@@ -12,8 +12,7 @@
                 mode: "thumbnails"
             },
             customizeThumbnail: function (fileManagerItem) {
-                if (fileManagerItem.dataItem)
-                    return fileManagerItem.dataItem.thumbnailUrl;
+                return fileManagerItem.dataItem ? fileManagerItem.dataItem.thumbnailUrl : null;
             },
             height: 450,
             permissions: {

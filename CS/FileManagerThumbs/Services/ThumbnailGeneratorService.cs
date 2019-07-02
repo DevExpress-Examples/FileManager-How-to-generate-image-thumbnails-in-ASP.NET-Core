@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Drawing;
 using System.Linq;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using System.Security.Cryptography;
 using System.Text;
 using DevExtreme.AspNet.Mvc.FileManagement;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace FileManagerThumbs.Services {
@@ -13,30 +15,34 @@ namespace FileManagerThumbs.Services {
         void AssignThumbnailUrl(FileSystemInfo fileSystemInfo, IClientFileSystemItem clientItem);
     }
 
-    public class ThumbnailGeneratorService : IThumbnailGeneratorService {
+    public class ThumbnailGeneratorService : IThumbnailGeneratorService, IDisposable {
         const int
-            ThumbnailWidth = 50,
-            ThumbnailHeight = 50;
+            ThumbnailWidth = 100,
+            ThumbnailHeight = 100;
 
-        static readonly string[] AllowedFileExtensions = {
-            ".png",
-            ".gif",
-            ".jpg",
-            ".jpeg",
-            ".ico",
-            ".bmp"
+        const string
+            ThumbnailsDirectoryPath = "thumb";
+
+
+        static readonly IReadOnlyCollection<string> AllowedFileExtensions = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) {
+            ".png", ".gif", ".jpg", ".jpeg", ".ico", ".bmp"
         };
 
-        public ThumbnailGeneratorService(string thumbnailsDirectoryPath, IUrlHelperFactory urlHelperFactory, IActionContextAccessor actionContextAccessor) {
+        public ThumbnailGeneratorService(IHostingEnvironment environment, IUrlHelperFactory urlHelperFactory, IActionContextAccessor actionContextAccessor) {
             UrlHelperFactory = urlHelperFactory ?? throw new ArgumentNullException(nameof(urlHelperFactory));
             ActionContextAccessor = actionContextAccessor ?? throw new ArgumentNullException(nameof(actionContextAccessor));
+
+            var fullThumbnailsDirectoryPath = Path.Combine(environment.WebRootPath, ThumbnailsDirectoryPath);
+            ThumbnailsDirectory = new DirectoryInfo(fullThumbnailsDirectoryPath);
             
-            ThumbnailsDirectory = new DirectoryInfo(thumbnailsDirectoryPath);
+            CryptoProvider = new SHA1CryptoServiceProvider();
         }
 
         IUrlHelperFactory UrlHelperFactory { get; }
         IActionContextAccessor ActionContextAccessor { get; }
         DirectoryInfo ThumbnailsDirectory { get; }
+        
+        SHA1CryptoServiceProvider CryptoProvider { get; } 
 
         public void AssignThumbnailUrl(FileSystemInfo fileSystemInfo, IClientFileSystemItem clientItem) {
             if(clientItem.IsDirectory || !CanGenerateThumbnail(fileSystemInfo))
@@ -54,7 +60,7 @@ namespace FileManagerThumbs.Services {
         FileInfo GetThumbnail(FileInfo file) {
             var thumbnailFile = new FileInfo(GetThumbnailFilePath(file));
 
-            if(!HasActualThumbnail(file, thumbnailFile)) {
+            if(!HasFreshThumbnail(file, thumbnailFile)) {
                 using (var thumbnailStream = file.OpenRead()) {
                     if (!GenerateThumbnail(thumbnailStream, thumbnailFile))
                         return null;
@@ -66,6 +72,9 @@ namespace FileManagerThumbs.Services {
         
         static bool GenerateThumbnail(Stream file, FileInfo thumbnailFile) {
             try {
+                if(thumbnailFile.Exists)
+                    thumbnailFile.Delete();
+                
                 if (!Directory.Exists(thumbnailFile.DirectoryName))
                     Directory.CreateDirectory(thumbnailFile.DirectoryName);
 
@@ -76,15 +85,14 @@ namespace FileManagerThumbs.Services {
             }
         }
         static void GenerateThumbnailCore(Stream file, FileInfo thumbnailFile, int width, int height) {
-            var original = Image.FromStream(file);
-            var thumbnail = ChangeImageSize(original, width, height);
-            try {
-                thumbnail.Save(thumbnailFile.FullName);
-            } catch {
-                throw new Exception("Thumbnail error");
-            } finally {
-                thumbnail.Dispose();
-                original.Dispose();
+            using (var originalImage = Image.FromStream(file))
+            using (var thumbnail = ChangeImageSize(originalImage, width, height)) {
+                try {
+                    thumbnail.Save(thumbnailFile.FullName);
+                }
+                catch {
+                    // ignored
+                }
             }
         }
         static Bitmap ChangeImageSize(Image original, int width, int height) {
@@ -107,50 +115,29 @@ namespace FileManagerThumbs.Services {
             return thumbnail;
         }
         
-        static bool HasActualThumbnail(FileSystemInfo file, FileSystemInfo thumbnail) {
-            if (!thumbnail.Exists)
-                return false;
-
-            if(file.LastWriteTime <= thumbnail.LastWriteTime)
-                return true;
-            
-            try {
-                thumbnail.Delete();
-            } catch {
-                throw new Exception("Thumbnail error");
-            }
-            return false;
+        static bool HasFreshThumbnail(FileSystemInfo file, FileSystemInfo thumbnail) {
+            return thumbnail.Exists && file.LastWriteTime <= thumbnail.LastWriteTime;
         }
         
         static bool CanGenerateThumbnail(FileSystemInfo fileSystemInfo) {
-            return AllowedFileExtensions.Any(s => s.Equals(fileSystemInfo.Extension, StringComparison.OrdinalIgnoreCase));
+            return AllowedFileExtensions.Contains(fileSystemInfo.Extension);
         }
         string GetThumbnailFilePath(FileSystemInfo file) {
-            var thumbDir = GetThumbnailFolderName(file);
-            return Path.Combine(ThumbnailsDirectory.FullName, thumbDir, GetUriSafeFileName(GetThumbnailFileName(file)));
+            var thumbnailName = GetThumbnailFileName(file);
+            return Path.Combine(ThumbnailsDirectory.FullName, thumbnailName.Substring(0, 3), thumbnailName);
         }
-        static string GetThumbnailFileName(FileSystemInfo file) {
-            return "thumb_" + file.Name;
+        string GetThumbnailFileName(FileSystemInfo file) {
+            return GetSHA1Hash(Encoding.UTF8.GetBytes(file.FullName)) + file.Extension;
         }
-        static string GetUriSafeFileName(string name) {
-            return name
-                .Replace("&", "[amp];")
-                .Replace("#", "[sharp]")
-                .Replace("+", "[plus]");
+        string GetSHA1Hash(byte[] data) {
+            var hashBytes = CryptoProvider.ComputeHash(data);
+            return string.Concat(
+                Array.ConvertAll(hashBytes, b => b.ToString("x2"))
+            );
         }
-        static string GetThumbnailFolderName(FileSystemInfo file) {
-            var token = Path.GetDirectoryName(file.FullName);
-            return GetSHA1Hash(Encoding.ASCII.GetBytes(token));
-        }
-        static string GetSHA1Hash(byte[] data) {
-            var algorithm = new SHA1CryptoServiceProvider();
-            var hashBytes = algorithm.ComputeHash(data);
-            var sb = new StringBuilder();
-            for (var i = 0; i < hashBytes.Length; i++) {
-                var str = hashBytes[i].ToString("x2");
-                sb.Append(str);
-            }
-            return sb.ToString();
+
+        void IDisposable.Dispose() {
+            CryptoProvider.Dispose();
         }
     }
 }
