@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace FileManagerThumbs.Services {
     public interface IThumbnailGeneratorService {
-        void AssignThumbnailUrl(FileSystemInfo fileSystemInfo, IClientFileSystemItem clientItem);
+        void AssignThumbnailUrl(FileSystemInfo fileSystemInfo, FileSystemItem clientItem);
     }
 
     public class ThumbnailGeneratorService : IThumbnailGeneratorService, IDisposable {
@@ -28,39 +28,39 @@ namespace FileManagerThumbs.Services {
             ".png", ".gif", ".jpg", ".jpeg", ".ico", ".bmp"
         };
 
-        public ThumbnailGeneratorService(IHostingEnvironment environment, IUrlHelperFactory urlHelperFactory, IActionContextAccessor actionContextAccessor) {
+        public ThumbnailGeneratorService(IWebHostEnvironment environment, IUrlHelperFactory urlHelperFactory, IActionContextAccessor actionContextAccessor) {
             UrlHelperFactory = urlHelperFactory ?? throw new ArgumentNullException(nameof(urlHelperFactory));
             ActionContextAccessor = actionContextAccessor ?? throw new ArgumentNullException(nameof(actionContextAccessor));
 
             var fullThumbnailsDirectoryPath = Path.Combine(environment.WebRootPath, ThumbnailsDirectoryPath);
             ThumbnailsDirectory = new DirectoryInfo(fullThumbnailsDirectoryPath);
-            
+
             CryptoProvider = new SHA1CryptoServiceProvider();
         }
 
         IUrlHelperFactory UrlHelperFactory { get; }
         IActionContextAccessor ActionContextAccessor { get; }
         DirectoryInfo ThumbnailsDirectory { get; }
-        
-        SHA1CryptoServiceProvider CryptoProvider { get; } 
 
-        public void AssignThumbnailUrl(FileSystemInfo fileSystemInfo, IClientFileSystemItem clientItem) {
-            if(clientItem.IsDirectory || !CanGenerateThumbnail(fileSystemInfo))
+        SHA1CryptoServiceProvider CryptoProvider { get; }
+
+        public void AssignThumbnailUrl(FileSystemInfo fileSystemInfo, FileSystemItem clientItem) {
+            if (clientItem.IsDirectory || !CanGenerateThumbnail(fileSystemInfo))
                 return;
-            
-            if(!(fileSystemInfo is FileInfo fileInfo))
+
+            if (!(fileSystemInfo is FileInfo fileInfo))
                 return;
-            
+
             var helper = UrlHelperFactory.GetUrlHelper(ActionContextAccessor.ActionContext);
             var thumbnail = GetThumbnail(fileInfo);
             var relativeThumbnailPath = Path.Combine(ThumbnailsDirectory.Name, thumbnail.Directory?.Name, thumbnail.Name);
             clientItem.CustomFields["thumbnailUrl"] = helper.Content(relativeThumbnailPath);
         }
-        
+
         FileInfo GetThumbnail(FileInfo file) {
             var thumbnailFile = new FileInfo(GetThumbnailFilePath(file));
 
-            if(!HasFreshThumbnail(file, thumbnailFile)) {
+            if (!HasFreshThumbnail(file, thumbnailFile)) {
                 using (var thumbnailStream = file.OpenRead()) {
                     if (!GenerateThumbnail(thumbnailStream, thumbnailFile))
                         return null;
@@ -69,18 +69,19 @@ namespace FileManagerThumbs.Services {
 
             return thumbnailFile;
         }
-        
+
         static bool GenerateThumbnail(Stream file, FileInfo thumbnailFile) {
             try {
-                if(thumbnailFile.Exists)
+                if (thumbnailFile.Exists)
                     thumbnailFile.Delete();
-                
+
                 if (!Directory.Exists(thumbnailFile.DirectoryName))
                     Directory.CreateDirectory(thumbnailFile.DirectoryName);
 
                 GenerateThumbnailCore(file, thumbnailFile, ThumbnailWidth, ThumbnailHeight);
                 return true;
-            } catch {
+            }
+            catch {
                 return false;
             }
         }
@@ -114,11 +115,11 @@ namespace FileManagerThumbs.Services {
 
             return thumbnail;
         }
-        
+
         static bool HasFreshThumbnail(FileSystemInfo file, FileSystemInfo thumbnail) {
             return thumbnail.Exists && file.LastWriteTime <= thumbnail.LastWriteTime;
         }
-        
+
         static bool CanGenerateThumbnail(FileSystemInfo fileSystemInfo) {
             return AllowedFileExtensions.Contains(fileSystemInfo.Extension);
         }
