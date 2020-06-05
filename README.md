@@ -4,7 +4,14 @@ This examples shows how to generate and show thumbnails for image files. The thu
 
 ### Follow these steps:
 1. Add the FileManager to your page and setup it on the client side.
-2. Set the [fileProvider.endpointUrl](https://js.devexpress.com/DevExtreme/ApiReference/UI_Widgets/dxFileManager/Configuration/#fileProvider) option so that it points to your API controller.
+2. Connect the File Manager to your API Controller via the Remote file system provider:
+```cs
+@(Html.DevExtreme().FileManager()
+    .ID("file-manager")
+    .FileSystemProvider(p=>
+        p.Remote().Url(Url.Action("FileSystem", "FileManagerApi"))
+    )
+```
 3. Copy the service implementation from the [ThumbnailGeneratorService.cs](CS/FileManagerThumbs/Services/ThumbnailGeneratorService.cs) file. It uses the [System.Drawing.Common](https://www.nuget.org/packages/System.Drawing.Common/) library that supports .NET Core: [System.Drawing.Common - Release Notes](https://github.com/dotnet/core/tree/master/release-notes). 
 
 4. Register the service in Startup.cs:
@@ -15,25 +22,34 @@ This examples shows how to generate and show thumbnails for image files. The thu
 ```
 5. To use the service, create a method in your [API Controller](CS/FileManagerThumbs/Controllers/FileManagerApiController.cs) that will handle the File Manager operations and inject the service via Dependency Injection in the following way: 
 ```cs
-        public FileManagerApiController(IHostingEnvironment environment, IThumbnailGeneratorService thumbnailGenerator) {
+       public FileManagerApiController(IWebHostEnvironment environment, IThumbnailGeneratorService thumbnailGenerator) {
             Environment = environment;
             ThumbnailGenerator = thumbnailGenerator;
         }
+
+        IWebHostEnvironment Environment { get; }
         IThumbnailGeneratorService ThumbnailGenerator { get; }
+
         public IActionResult FileSystem(FileSystemCommand command, string arguments) {
             var rootPath = Path.Combine(Environment.WebRootPath, "ContentFolder");
             var config = new FileSystemConfiguration {
                 Request = Request,
-                FileSystemProvider = new DefaultFileProvider(rootPath, ThumbnailGenerator.AssignThumbnailUrl)
+                FileSystemProvider = new PhysicalFileSystemProvider(rootPath, ThumbnailGenerator.AssignThumbnailUrl),
+                ...
             };
-          ...
+            ...
         }
 ```
-6. On the client side, use the [customizeThumbnail](https://js.devexpress.com/DevExtreme/ApiReference/UI_Widgets/dxFileManager/Configuration/#customizeThumbnail) method and get the passed thumbnailUrl from **fileManagerItem.dataItem**:
+6. On the client side, use the [CustomizeThumbnail](https://js.devexpress.com/DevExtreme/ApiReference/UI_Widgets/dxFileManager/Configuration/#customizeThumbnail) method and get the passed thumbnailUrl from **fileManagerItem.dataItem**:
+```cs
+...
+.CustomizeThumbnail("OnCustomizeThumbnail")
+```
 ```js
- customizeThumbnail: function (fileManagerItem) {
-    return fileManagerItem.dataItem ? fileManagerItem.dataItem.thumbnailUrl : null;
-}
+  function OnCustomizeThumbnail(fileManagerItem) {
+        console.log(fileManagerItem);
+        return fileManagerItem.dataItem ? fileManagerItem.dataItem.thumbnailUrl : null;
+    }
 ```
 > **NOTE**
 > On *Unix-based* systems, you may get the *"System.TypeInitializationException: The type initializer for 'Gdip' threw an exception. ---> System.DllNotFoundException: Unable to load DLL 'libgdiplus': The specified module could not be found"* exception. To solve the problem, install gdi+ using the following command:
