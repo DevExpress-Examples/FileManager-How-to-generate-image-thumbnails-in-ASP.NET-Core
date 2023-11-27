@@ -45,7 +45,7 @@ This examples shows how to generate and show thumbnails for image files. The thu
             ...
         }
 ```
-6. On the client side, use the [CustomizeThumbnail](https://js.devexpress.com/DevExtreme/ApiReference/UI_Widgets/dxFileManager/Configuration/#customizeThumbnail) method and get the passed thumbnailUrl from **fileManagerItem.dataItem**:
+6. On the client side, use the [CustomizeThumbnail](https://js.devexpress.com/jQuery/Documentation/ApiReference/UI_Components/dxFileManager/Configuration/#customizeThumbnail) method and get the passed thumbnailUrl from **fileManagerItem.dataItem**:
 ```cs
 ...
 .CustomizeThumbnail("OnCustomizeThumbnail")
