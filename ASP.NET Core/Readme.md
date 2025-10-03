@@ -1,4 +1,25 @@
-# ASP.NET Core DevExtreme Example
+# FileManager: Image Thumbnails
+
+This sample illustrates how to implement custom image thumbnail generation in FileManager with a remote file system provider.
+
+## Migration Complete
+
+This project has been migrated from the legacy ASP.NET Core 3.1 structure to the modern .NET 8.0 template structure. The migration includes:
+
+### Changes Made:
+- **Upgraded to .NET 8.0** and DevExtreme 25.1.*
+- **Updated project structure** to use modern minimal hosting approach
+- **Migrated services** from Startup.cs to Program.cs
+- **Updated package versions** to be compatible with current DevExtreme
+- **Preserved functionality**: ThumbnailGeneratorService and FileManagerApiController remain fully functional
+- **Maintained ContentFolder** with all original images and files
+- **Updated build system** to use gulp with modern DevExtreme distribution
+
+### Key Features:
+- Custom thumbnail generation for image files
+- File Manager with thumbnail view mode
+- Physical file system provider integration
+- Support for standard image formats (.png, .gif, .jpg, .jpeg, .ico, .bmp)
 
 For more information about this example check the [Readme](../README.md).
 

@@ -307,4 +307,6 @@ TesterMetadata.xml
 */wwwroot/*
 
 !*/wwwroot/css/Site.css
+!*/wwwroot/ContentFolder/
+!*/wwwroot/ContentFolder/**
 *.DS_Store

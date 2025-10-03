@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Drawing;
@@ -10,7 +10,7 @@ using DevExtreme.AspNet.Mvc.FileManagement;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
-namespace FileManagerThumbs.Services {
+namespace ASP.NET_Core.Services {
     public interface IThumbnailGeneratorService {
         void AssignThumbnailUrl(FileSystemInfo fileSystemInfo, FileSystemItem clientItem);
     }
@@ -35,14 +35,14 @@ namespace FileManagerThumbs.Services {
             var fullThumbnailsDirectoryPath = Path.Combine(environment.WebRootPath, ThumbnailsDirectoryPath);
             ThumbnailsDirectory = new DirectoryInfo(fullThumbnailsDirectoryPath);
 
-            CryptoProvider = new SHA1CryptoServiceProvider();
+            CryptoProvider = SHA1.Create();
         }
 
         IUrlHelperFactory UrlHelperFactory { get; }
         IActionContextAccessor ActionContextAccessor { get; }
         DirectoryInfo ThumbnailsDirectory { get; }
 
-        SHA1CryptoServiceProvider CryptoProvider { get; }
+        HashAlgorithm CryptoProvider { get; }
 
         public void AssignThumbnailUrl(FileSystemInfo fileSystemInfo, FileSystemItem clientItem) {
             if (clientItem.IsDirectory || !CanGenerateThumbnail(fileSystemInfo))
