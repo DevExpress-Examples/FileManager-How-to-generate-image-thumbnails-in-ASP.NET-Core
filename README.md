@@ -47,7 +47,7 @@ This examples shows how to generate and show thumbnails for image files. The thu
 brew install mono-libgdiplus
 ```
 <!-- feedback -->
-## Does this example address your development requirements/objectives?
+## Does This Example Address Your Development Requirements/Objectives?
 
 [<img src="https://www.devexpress.com/support/examples/i/yes-button.svg"/>](https://www.devexpress.com/support/examples/survey.xml?utm_source=github&utm_campaign=FileManager-How-to-generate-image-thumbnails-in-ASP.NET-Core&~~~was_helpful=yes) [<img src="https://www.devexpress.com/support/examples/i/no-button.svg"/>](https://www.devexpress.com/support/examples/survey.xml?utm_source=github&utm_campaign=FileManager-How-to-generate-image-thumbnails-in-ASP.NET-Core&~~~was_helpful=no)
 
